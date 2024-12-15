@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>Login & Signup</title>
+</head>
+<body>
+
+        <!-- Signup Form -->
+        <div class="signup-box" id="signupBox">
+            <div class="login-header">
+                <header>Sign Up</header>
+            </div>
+            <div class="input-box">
+                <input type="text" class="input-field" placeholder="Email" id="signupEmail" autocomplete="off" required>
+            </div>
+            <div class="input-box">
+                <input type="password" class="input-field" placeholder="Password" id="signupPassword" required>
+                <input type="checkbox" id="toggleSignupPassword" onclick="togglePasswordVisibility('signupPassword')"> Show Password
+            </div>
+            <div class="input-submit">
+                <button class="submit-btn" id="signupSubmit" onclick="signup()">Sign Up</button>
+            </div>
+            <div class="sign-up-link">
+                <p>Already have an account? <a href="#" onclick="toggleForm('login')">Login</a></p>
+            </div>
+        </div>
+
+        <!-- Login Form -->
+        <div class="login-box" id="loginBox" style="display:none;">
+            <div class="login-header">
+                <header>Login</header>
+            </div>
+            <div class="input-box">
+                <input type="text" class="input-field" placeholder="Email" id="loginEmail" autocomplete="off" required>
+            </div>
+            <div class="input-box">
+                <input type="password" class="input-field" placeholder="Password" id="loginPassword" required>
+                <input type="checkbox" id="toggleLoginPassword" onclick="togglePasswordVisibility('loginPassword')"> Show Password
+            </div>
+            <div class="forgot">
+                <section>
+                    <input type="checkbox" id="check">
+                    <label for="check">Remember me</label>
+                </section>
+                <section>
+                    <a href="#" onclick="toggleForm('reset')">Forgot password?</a>
+                </section>
+            </div>
+            <div class="input-submit">
+                <button class="submit-btn" id="loginSubmit" onclick="login()">Sign In</button>
+            </div>
+            <div class="sign-up-link">
+                <p>Don't have an account? <a href="#" onclick="toggleForm('signup')">Sign Up</a></p>
+            </div>
+        </div>
+
+        <!-- Password Reset Form -->
+        <div class="reset-box" id="resetBox" style="display:none;">
+            <div class="login-header">
+                <header>Reset Password</header>
+            </div>
+            <div class="input-box">
+                <input type="text" class="input-field" placeholder="Enter your email" id="resetEmail" autocomplete="off" required>
+            </div>
+            <div class="input-submit">
+                <button class="submit-btn" id="resetSubmit" onclick="resetPassword()">Send Reset Link</button>
+            </div>
+            <div class="sign-up-link">
+                <p>Remembered your password? <a href="#" onclick="toggleForm('login')">Login</a></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Array of user credentials
+        const users = [
+            { email: "Ganesh@gmail.com", password: "Ganesh123" },
+            { email: "Ravi@gmail.com", password: "Ravi123" },
+            { email: "Shankar@gmail.com", password: "Shankar123" }
+        ];
+
+        function login() {
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value.trim();
+
+            // Validate input fields
+            if (!email || !password) {
+                alert("Please enter both email and password.");
+                return;
+            }
+
+            // Check credentials against the user list
+            const user = users.find(user => user.email === email && user.password === password);
+
+            if (user) {
+                // Redirect to chat.html if credentials are valid
+                window.location.href = "chat.html";  // Redirection to chat application
+            } else {
+                alert("Invalid credentials. Please try again.");
+            }
+        }
+
+        // Function to toggle between forms
+        function toggleForm(form) {
+            const signupBox = document.getElementById('signupBox');
+            const loginBox = document.getElementById('loginBox');
+            const resetBox = document.getElementById('resetBox');
+
+            signupBox.style.display = 'none';
+            loginBox.style.display = 'none';
+            resetBox.style.display = 'none';
+
+            if (form === 'signup') {
+                signupBox.style.display = 'block';
+            } else if (form === 'login') {
+                loginBox.style.display = 'block';
+            } else if (form === 'reset') {
+                resetBox.style.display = 'block';
+            }
+        }
+
+        // Function for signup process (for demonstration)
+        function signup() {
+            const email = document.getElementById('signupEmail').value.trim();
+            const password = document.getElementById('signupPassword').value.trim();
+
+            // Replace with actual signup logic (e.g., Firebase Authentication)
+            if (email && password) {
+                alert("Signup successful! You can now login.");
+                toggleForm('login');
+            } else {
+                alert("Please fill in all fields.");
+            }
+        }
+
+        // Function for password reset process
+        function resetPassword() {
+            const email = document.getElementById('resetEmail').value.trim();
+
+            // Replace with actual password reset logic (e.g., Firebase Authentication)
+            if (email) {
+                alert("A password reset link has been sent to " + email);
+                toggleForm('login'); // Return to login form
+            } else {
+                alert("Please enter your email.");
+            }
+        }
+
+        // Function to toggle password visibility
+        function togglePasswordVisibility(fieldId) {
+            const passwordField = document.getElementById(fieldId);
+            if (passwordField.type === "password") {
+                passwordField.type = "text";
+            } else {
+                passwordField.type = "password";
+            }
+        }
+    </script>
+</body>
+</html>

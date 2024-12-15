@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+        }
+
+        #messages {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: calc(100% - 100px);
+            background: #ffdead;
+            overflow-y: auto;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        #sendMsg {
+            position: fixed;
+            left: 0;
+            bottom: 0;
+            width: 100%;
+            height: 100px;
+            background: #ff4500;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #msgTxt {
+            width: calc(100% - 500px);
+            height: 50px;
+            padding-left: 10px;
+            box-sizing: border-box;
+        }
+
+        #msgSendBtn,
+        #msgBtn {
+            width: 100px;
+            height: 50px;
+            margin-left: 10px;
+            background-color: #fff; /* Button background color */
+            color: #ff4500; /* Button text color */
+            border: none; /* Remove border */
+            border-radius: 5px; /* Rounded corners */
+            cursor: pointer; /* Pointer on hover */
+            font-weight: bold; /* Bold text */
+        }
+
+        #msgSendBtn:hover,
+        #msgBtn:hover {
+            background-color: #ffdead; /* Change background on hover */
+            transition: background-color 0.3s; /* Smooth transition */
+        }
+
+        #fileType {
+            width: 200px;
+            height: 50px;
+            margin-left: 10px;
+        }
+
+        .outer {
+            width: 100%;
+            margin-top: 10px;
+            display: flex;
+        }
+
+        #inner {
+            padding: 10px;
+            box-sizing: border-box;
+            border-radius: 10px;
+        }
+
+        .me {
+            background: #ff4500;
+            color: #fff;
+        }
+
+        .notMe {
+            background: #4169E1;
+            color: #fff;
+        }
+
+        select {
+            margin-left: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="messages"></div>
+
+    <div id="sendMsg">
+        <input type="text" id="msgTxt" placeholder="ENTER YOUR MSG...">
+        <input type="submit" id="msgSendBtn" value="Send Msg" onclick="module.sendMsg()">
+        <select id="fileType">
+            <option value="">Select File Type</option>
+            <option value="image">Image URL</option>
+            <option value="video">Video URL</option>
+            <option value="audio">Audio URL</option>
+            <option value="pdf">PDF URL</option> <!-- Added PDF option -->
+        </select>
+        <input type="submit" id="msgBtn" value="Send Media" onclick="module.addMediaUrl()">
+    </div>
+
+    <script>
+        module = {};
+    </script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
+        import { getDatabase, ref, set, remove, onChildAdded } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDxQAmdP17wDGd6w0KMfsIDf19s8aDr4-M",
+            authDomain: "chatapp-6aec3.firebaseapp.com",
+            databaseURL: "https://chatapp-6aec3-default-rtdb.firebaseio.com",
+            projectId: "chatapp-6aec3",
+            storageBucket: "chatapp-6aec3.appspot.com",
+            messagingSenderId: "359229936738",
+            appId: "1:359229936738:web:30bb3275ce13afa3c4ad3b",
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        var sender;
+        if (sessionStorage.getItem('sender')) {
+            sender = sessionStorage.getItem('sender');
+        } else {
+            sender = prompt('PLEASE ENTER YOUR NAME');
+            sessionStorage.setItem('sender', sender);
+        }
+
+        // Send text message function
+        module.sendMsg = function sendMsg() {
+            const msgTxt = document.getElementById('msgTxt').value;
+            if (msgTxt) {
+                const timestamp = new Date().getTime();
+
+                const msgPreview = `<div style="justify-content:end" class="outer" id="${timestamp}">
+                                        <div id="inner" class="me">
+                                            you : ${msgTxt}
+                                            <select onchange="module.handleAction('${timestamp}', this.value)">
+                                                <option value="">Actions</option>
+                                                <option value="delete">Delete</option>
+                                            </select>
+                                        </div>
+                                    </div>`;
+                document.getElementById('messages').innerHTML += msgPreview;
+                document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
+
+                // Send message to the Firebase database
+                set(ref(db, "messages/" + timestamp), {
+                    msg: msgTxt,
+                    sender: sender,
+                    type: 'text'
+                });
+
+                document.getElementById('msgTxt').value = ''; // Clear input after sending
+            }
+        };
+
+        // Add media URL function
+        module.addMediaUrl = function addMediaUrl() {
+            const fileType = document.getElementById('fileType').value;
+            const mediaUrl = prompt(`Please enter ${fileType} URL:`);
+
+            if (mediaUrl) {
+                const timestamp = new Date().getTime();
+                let mediaPreview = '';
+
+                if (fileType === 'image') {
+                    mediaPreview = `<div style="justify-content:end" class="outer" id="${timestamp}">
+                                        <div id="inner" class="me">
+                                            you : <img src="${mediaUrl}" alt="Image" style="max-width: 200px;">
+                                            <select onchange="module.handleAction('${timestamp}', this.value)">
+                                                <option value="">Actions</option>
+                                                <option value="delete">Delete</option>
+                                            </select>
+                                        </div>
+                                    </div>`;
+                } else if (fileType === 'video') {
+                    mediaPreview = `<div style="justify-content:end" class="outer" id="${timestamp}">
+                                        <div id="inner" class="me">
+                                            you : <video controls style="max-width: 200px;">
+                                                    <source src="${mediaUrl}" type="video/mp4">
+                                                  </video>
+                                            <select onchange="module.handleAction('${timestamp}', this.value)">
+                                                <option value="">Actions</option>
+                                                <option value="delete">Delete</option>
+                                            </select>
+                                        </div>
+                                    </div>`;
+                } else if (fileType === 'audio') {
+                    mediaPreview = `<div style="justify-content:end" class="outer" id="${timestamp}">
+                                        <div id="inner" class="me">
+                                            you : <audio controls>
+                                                    <source src="${mediaUrl}" type="audio/mp3">
+                                                  </audio>
+                                            <select onchange="module.handleAction('${timestamp}', this.value)">
+                                                <option value="">Actions</option>
+                                                <option value="delete">Delete</option>
+                                            </select>
+                                        </div>
+                                    </div>`;
+                } else if (fileType === 'pdf') { // Handling PDF URL
+                    mediaPreview = `<div style="justify-content:end" class="outer" id="${timestamp}">
+                                        <div id="inner" class="me">
+                                            you : <a href="${mediaUrl}" target="_blank">Open PDF</a>
+                                            <select onchange="module.handleAction('${timestamp}', this.value)">
+                                                <option value="">Actions</option>
+                                                <option value="delete">Delete</option>
+                                            </select>
+                                        </div>
+                                    </div>`;
+                }
+
+                document.getElementById('messages').innerHTML += mediaPreview;
+                document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
+
+                // Send media to the Firebase database
+                set(ref(db, "messages/" + timestamp), {
+                    msg: mediaUrl,
+                    sender: sender,
+                    type: fileType
+                });
+            }
+        };
+
+        // Display messages
+        function showMsg(data) {
+            if (!document.getElementById(data.key)) {
+                let html = '';
+                const msg = data.val().msg;
+
+                if (data.val().type === 'text') {
+                    html = `<div style="justify-content:start" class="outer" id="${data.key}">
+                                <div id="inner" class="notMe">
+                                    ${data.val().sender} : ${msg}
+                                    <select onchange="module.handleAction('${data.key}', this.value)">
+                                        <option value="">Actions</option>
+                                        <option value="delete">Delete</option>
+                                    </select>
+                                </div>
+                            </div>`;
+                } else if (data.val().type === 'image') {
+                    html = `<div style="justify-content:start" class="outer" id="${data.key}">
+                                <div id="inner" class="notMe">
+                                    ${data.val().sender} : <img src="${msg}" alt="Image" style="max-width: 200px;">
+                                    <select onchange="module.handleAction('${data.key}', this.value)">
+                                        <option value="">Actions</option>
+                                        <option value="delete">Delete</option>
+                                    </select>
+                                </div>
+                            </div>`;
+                } else if (data.val().type === 'video') {
+                    html = `<div style="justify-content:start" class="outer" id="${data.key}">
+                                <div id="inner" class="notMe">
+                                    ${data.val().sender} : <video controls style="max-width: 200px;">
+                                                            <source src="${msg}" type="video/mp4">
+                                                        </video>
+                                    <select onchange="module.handleAction('${data.key}', this.value)">
+                                        <option value="">Actions</option>
+                                        <option value="delete">Delete</option>
+                                    </select>
+                                </div>
+                            </div>`;
+                } else if (data.val().type === 'audio') {
+                    html = `<div style="justify-content:start" class="outer" id="${data.key}">
+                                <div id="inner" class="notMe">
+                                    ${data.val().sender} : <audio controls>
+                                                            <source src="${msg}" type="audio/mp3">
+                                                        </audio>
+                                    <select onchange="module.handleAction('${data.key}', this.value)">
+                                        <option value="">Actions</option>
+                                        <option value="delete">Delete</option>
+                                    </select>
+                                </div>
+                            </div>`;
+                } else if (data.val().type === 'pdf') { // Handling PDF type
+                    html = `<div style="justify-content:start" class="outer" id="${data.key}">
+                                <div id="inner" class="notMe">
+                                    ${data.val().sender} : <a href="${msg}" target="_blank">Open PDF</a>
+                                    <select onchange="module.handleAction('${data.key}', this.value)">
+                                        <option value="">Actions</option>
+                                        <option value="delete">Delete</option>
+                                    </select>
+                                </div>
+                            </div>`;
+                }
+
+                document.getElementById('messages').innerHTML += html;
+                document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
+            }
+        }
+
+        // Handle delete action
+        module.handleAction = function handleAction(key, action) {
+            if (action === 'delete') {
+                document.getElementById(key).remove();
+                remove(ref(db, "messages/" + key));
+            }
+        };
+
+        // Listening for new messages
+        onChildAdded(ref(db, "messages"), showMsg);
+    </script>
+</body>
+
+</html>
