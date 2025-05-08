@@ -19,4 +19,4 @@ A real-time chat application built using Firebase and React (or specify your tec
   - Authentication
   - Storage
 
-## 📦 Installation
+
